@@ -55,4 +55,4 @@ with:
 
     # Set always-auth option in npmrc file.
     # Default: ''
-    always-auth: ''
+  always-auth: ''
