@@ -53,6 +53,6 @@ with:
   # Default: ''
   scope: ''
 
-    # Set always-auth option in npmrc file.
-    # Default: ''
+  # Set always-auth option in npmrc file.
+  # Default: ''
   always-auth: ''
