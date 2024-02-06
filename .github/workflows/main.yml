@@ -56,3 +56,12 @@ with:
   # Set always-auth option in npmrc file.
   # Default: ''
   always-auth: ''
+
+  # Trigger workflow on event
+  on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
