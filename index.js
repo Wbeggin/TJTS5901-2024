@@ -12,7 +12,7 @@ app.get('/api/', (request, response) => {
     response.json({ message: 'Hello World' })
   })
 
-  const PORT = 3003
+const PORT = 8080
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
