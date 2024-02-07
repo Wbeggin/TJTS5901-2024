@@ -4,9 +4,12 @@ const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 const { ok } = require('assert')
+app.use(cors())
+app.use(express.json())
+
 
 app.get('/api/', (request, response) => {
-    response.json(ok)
+    response.json({ message: 'Hello World' })
   })
 
   const PORT = 3003
