@@ -6,7 +6,7 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 app.use(cors())
 app.use(express.json())
-const orderController = require('./src/Controllers/OrderController')
+const orderController = require('./Controllers/OrderController')
 
 
 app.post('/api/AAPL/offer', orderController.createOffer);

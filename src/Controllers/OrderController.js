@@ -7,8 +7,8 @@ const axios = require('axios')
 
 exports.createOffer = async (request, response) => {
     try {
-      const { userId, price } = request.body
-      const order = new Order(userId, price, 'OFFER')
+      const { userId, price, quantity } = request.body
+      const order = new Order(userId, price, 'OFFER', quantity)
       response.status(200).json({ message: 'Offer created successfully.' });
     } catch (error) {
       response.status(400).json({ error: error.message })
@@ -17,8 +17,8 @@ exports.createOffer = async (request, response) => {
   
 exports.createBid = async (request, response) => {
 try {
-    const { userId, price } = request.body
-    const order = new Order(userId, price, 'BID')
+    const { userId, price, quantity } = request.body
+    const order = new Order(userId, price, 'BID', quantity)
     response.status(200).json({ message: 'Bid created successfully.' });
 } catch (error) {
     response.status(400).json({ error: error.message })
