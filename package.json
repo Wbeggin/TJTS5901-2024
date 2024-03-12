@@ -7,7 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --verbose --coverage",
-    "test:e2e": "cucumber-js"
+    "test:e2e": "cucumber-js src/features/"
   },
   "author": "",
   "license": "MIT",
