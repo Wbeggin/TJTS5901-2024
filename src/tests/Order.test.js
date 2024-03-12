@@ -1,62 +1,60 @@
+const { test, describe, expect } = require('@jest/globals');
 const { createBid, createOffer} = require('../Controllers/OrderController');
 const Order = require('../Models/Order');
+const OrderController = require('../Controllers/OrderController');
+
+const supertest = require('supertest')
+const app = require('../index');
+const api = supertest(app)
+
+describe('POST /api/AAPL/order', () => {
+  test('should create a new offer and return 200 status', async () => {
+    const newOffer = {
+      userId: 'user1',
+      price: 170.00,
+      type: 'OFFER',
+      quantity: 1
+    }
+    await api.post('/api/AAPL/order').send(newOffer).expect(200).expect('Content-Type', /application\/json/)
+  })
+
+
+  test('should throw an error when price has more than two decimal places', async () => {
+    const newOffer = {
+      userId: 'user1',
+      price: 170.123,
+      type: 'BID',
+      quantity: 1
+    }
+    await api.post('/api/AAPL/order').send(newOffer).expect(400).expect('Content-Type', /application\/json/)
+  })
+
+  test('should throw an error when not all properties are provided', async () => {
+    const newOffer = {
+      userId: 'user1',
+      price: 170.00,
+      type: 'OFFER'
+    }
+    await api.post('/api/AAPL/order').send(newOffer).expect(400).expect('Content-Type', /application\/json/)
+  })
+
+})
 
 describe('Order', () => {
-  it('should correctly instantiate with provided arguments for creating a bid', () => {
-    const order = new Order('user1', 150, 'BID', 10, 140);
+  test('should correctly instantiate with provided arguments for creating a bid', () => {
+    const order = new Order({userId: 'user1', price: 150, type: 'BID', quantity: 10});
     expect(order.userId).toBe('user1');
     expect(order.price).toBe(150.00);
     expect(order.type).toBe('BID');
     expect(order.quantity).toBe(10);
-    expect(order.lastTradedPrice).toBe(140);
   });
-
-  it('should correctly instantiate with provided arguments for creating an offer', () => {
-    const order = new Order('user2', 200, 'OFFER', 5, 210);
-    expect(order.userId).toBe('user2');
-    expect(order.price).toBe(200.00);
-    expect(order.type).toBe('OFFER');
-    expect(order.quantity).toBe(5);
-    expect(order.lastTradedPrice).toBe(210);
+  
+  test('should correctly instantiate with provided arguments for creating an offer', () => {
+    const order = new Order({userId: 'user2', price: 200, type: 'OFFER', quantity: 5})
+    expect(order.userId).toBe('user2')
+    expect(order.price).toBe(200.00)
+    expect(order.type).toBe('OFFER')
+    expect(order.quantity).toBe(5)
   });
-
-  it('should throw an error when instantiated without necessary arguments', () => {
-    expect(() => new Order()).toThrow();
-    expect(() => new Order('user1')).toThrow();
-    expect(() => new Order('user1', 150)).toThrow();
-  });
-
-  it('should throw an error when price has more than two decimal places', () => {
-    expect(() => new Order('user1', 150.123, 'BID', 10, 150)).toThrow('Price must be up to two decimal places.');
-  });
-
-  it('createBid should create an order with a price of 150.12', () => {
-    const order = new Order('user1', 150.12, 'BID', 10, 150)
-    createBid({ body: order }, {
-      status: (code) => {
-        expect(code).toBe(200)
-        return {
-          json: (data) => {
-            expect(data.message).toBe('Bid created successfully.')
-          }
-        }
-      }
-    })
-  })
-
-  it('createOffer should create an order with a price of 200.00', () => {
-    const order = new Order('user2', 200.00, 'OFFER', 5, 200)
-    createOffer({ body: order }, {
-      status: (code) => {
-        expect(code).toBe(200)
-        return {
-          json: (data) => {
-            expect(data.message).toBe('Offer created successfully.')
-          }
-        }
-      }
-    })
-  })
 
 });
-
