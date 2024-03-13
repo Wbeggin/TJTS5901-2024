@@ -12,7 +12,7 @@ const orderController = require('./Controllers/OrderController')
 
 app.post('/api/AAPL/order', orderController.createOrder);
 app.get('/api/AAPL/stock', orderController.getStock);
-
+app.get('/api/AAPL/trades', orderController.getTrades);
 const PORT = 8080
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })

@@ -6,6 +6,7 @@ let stock = {}
 let last_fetch = 0
 const axios = require('axios')
 let lastTradedPrice = 0
+let trades = 0
 
 exports.createOrder = async (request, response) => {
     try {
@@ -35,8 +36,12 @@ exports.createOrder = async (request, response) => {
       const savedOrder = await order.save()
 
       // Start the order matching process
+      trades = 0
       await matchOrder(order)
-
+      const tradesString = trades === 1 ? 'executed 1 trade' : `executed ${trades} trades`
+      if (trades > 0) {
+        return response.status(200).json({ message: 'Order created successfully.', order: savedOrder, trades: tradesString })
+      }
       response.status(200).json({ message: 'Order created successfully.', order: savedOrder});
     } catch (error) {
       response.status(400).json({ error: error.message })
@@ -53,6 +58,15 @@ exports.getStock = async (request, response) => {
       }
     } catch (error) {
       response.status(500).send('Error fetching stock')
+    }
+}
+
+exports.getTrades = async (request, response) => {
+    try {
+      const trades = await Trade.find({}).sort({ time: -1 })
+      response.json(trades)
+    } catch (error) {
+      response.status(500).send({ error: error.message })
     }
 }
 
@@ -76,15 +90,17 @@ const matchOrder = async (order) => {
       })
       console.log(trade.price, trade.quantity, trade.time)
       await trade.save()
-
+      trades++
       // Update the quantity of the matching order
-      order.quantity -= trade.tradedQuantity;
-      matchingOrder.quantity -= trade.tradedQuantity
+      order.quantity -= trade.quantity;
+      matchingOrder.quantity -= trade.quantity;
       await order.save()
       await matchingOrder.save()
       // Remove the orders if their quantity is zero
-    if (order.quantity === 0) await order.remove()
-    if (matchingOrder.quantity === 0) await matchingOrder.remove()
+    if (order.quantity === 0) await Order.findByIdAndRemove(order.id)
+    if (matchingOrder && matchingOrder.quantity === 0) await Order.findByIdAndRemove(matchingOrder.id)
+    // Continue matching if there is still quantity left in the order
+    if (order.quantity > 0) await matchOrder(order)
     }
   }
 
