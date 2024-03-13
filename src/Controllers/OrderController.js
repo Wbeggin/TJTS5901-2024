@@ -1,10 +1,12 @@
 const { get } = require('mongoose');
 const Order = require('../Models/Order');
+const Trade = require('../Models/Trade');
 const url = 'https://api.marketdata.app/v1/stocks/quotes/AAPL/'
 let stock = {}
 let last_fetch = 0
 const axios = require('axios')
 let lastTradedPrice = 0
+let trades = 0
 
 exports.createOrder = async (request, response) => {
     try {
@@ -23,6 +25,9 @@ exports.createOrder = async (request, response) => {
     if (!Number.isInteger(quantity)) {
       return response.status(400).json({ error: 'Quantity must be an integer.' });      
     }
+    if (quantity < 1) {
+      return response.status(400).json({ error: 'Quantity must be a positive integer.' })
+    }
       // Validate that price is within +- 10% of the last traded price
       await getStock()
       console.log(lastTradedPrice)
@@ -32,6 +37,14 @@ exports.createOrder = async (request, response) => {
       }
       const order = new Order({userId, price, type, quantity})
       const savedOrder = await order.save()
+
+      // Start the order matching process
+      trades = 0
+      await matchOrder(order)
+      const tradesString = trades === 1 ? 'executed 1 trade' : `executed ${trades} trades`
+      if (trades > 0) {
+        return response.status(200).json({ message: 'Order created successfully.', order: savedOrder, trades: tradesString })
+      }
       response.status(200).json({ message: 'Order created successfully.', order: savedOrder});
     } catch (error) {
       response.status(400).json({ error: error.message })
@@ -50,6 +63,49 @@ exports.getStock = async (request, response) => {
       response.status(500).send('Error fetching stock')
     }
 }
+
+exports.getTrades = async (request, response) => {
+    try {
+      const trades = await Trade.find({}).sort({ time: -1 })
+      response.json(trades)
+    } catch (error) {
+      response.status(500).send({ error: error.message })
+    }
+}
+
+const matchOrder = async (order) => {
+    const { type, price, quantity } = order
+    console.log(type, price, quantity)
+    let matchingOrder
+    if (type === 'BID') {
+      matchingOrder = await Order.findOne({ type: 'OFFER', price: { $lte: price } }).sort({ price: 1 })
+      console.log(matchingOrder)
+    } else if (type === 'OFFER') {
+      matchingOrder = await Order.findOne({ type: 'BID', price: { $gte: price } }).sort({ price: -1 })
+      console.log(matchingOrder)
+    }
+    if (matchingOrder) {
+      // Create a new trade
+      const trade = new Trade({
+        time: new Date(),
+        price: Math.max(price, matchingOrder.price),
+        quantity: Math.min(quantity, matchingOrder.quantity),
+      })
+      console.log(trade.price, trade.quantity, trade.time)
+      await trade.save()
+      trades++
+      // Update the quantity of the matching order
+      order.quantity -= trade.quantity;
+      matchingOrder.quantity -= trade.quantity;
+      await order.save()
+      await matchingOrder.save()
+      // Remove the orders if their quantity is zero
+    if (order.quantity === 0) await Order.findByIdAndRemove(order.id)
+    if (matchingOrder && matchingOrder.quantity === 0) await Order.findByIdAndRemove(matchingOrder.id)
+    // Continue matching if there is still quantity left in the order
+    if (order.quantity > 0) await matchOrder(order)
+    }
+  }
 
 const getStock = async () => {
     const now = Date.now()

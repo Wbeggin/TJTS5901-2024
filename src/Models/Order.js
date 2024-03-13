@@ -18,7 +18,7 @@ const orderSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true,
-    min: [1, 'Quantity must be a positive integer.'],
+    //min: [1, 'Quantity must be a positive integer.'], had to remove because caused error when removing quantity from order
     validate: {
       validator: Number.isInteger,
       message: 'Quantity must be an integer.'
