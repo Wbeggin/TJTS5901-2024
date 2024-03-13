@@ -22,7 +22,7 @@ exports.createOrder = async (request, response) => {
     if (type !== 'BID' && type !== 'OFFER') {
       return response.status(400).json({ error: 'Type must be either BID or OFFER.' });
     }
-    if (!Number.isInteger(quantity) && quantity < 1) {
+    if (!Number.isInteger(quantity)) {
       return response.status(400).json({ error: 'Quantity must be an positive integer.' });      
     }
       // Validate that price is within +- 10% of the last traded price
