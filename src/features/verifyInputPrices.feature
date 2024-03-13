@@ -2,20 +2,17 @@ Feature: Verify input prices based on latest market data
 
   Scenario: Verify input prices are validated against the latest market data for AAPL
     Given Fetch the current market last trade price for "AAPL"
-    
-    When Attempt to place a "Bid" order at Price M1 multiplied by 1.08
-    Then The order is accepted
-    
-    When Attempt to place a "Offer" order at Price M1 multiplied by 0.90
+
+    When Order "Bid" price x 1.08, qty: 1
     Then The order is accepted
 
-    When Attempt to place a "Bid" order at Price M1 multiplied by 1.11
+    When Order "Offer" price x 0.9, qty: 1
+    Then The order is accepted
+
+    When Order "Bid" price x 1.11, qty: 1
     Then The order is rejected
+    Then No trade was made
 
-    When Attempt to place a "Offer" order at Price M1 multiplied by 0.90
-    Then The order is accepted
-
-    When Attempt to place a "Offer" order at Price M1 multiplied by -1.01
+    When Order "Offer" price x -1.01, qty: 1
     Then The order is rejected
-
-    #Verify no trades have happened for the rejected orders
+    Then No trade was made

@@ -3,13 +3,14 @@ Feature: Verify input quantity
   Scenario: Verify input quantity is valid
     Given Fetch the current market last trade price for "AAPL"
 
-    When Attempt to place a "Bid" order at Price M2 by a quantity of 0
+    When Order "Bid" price x 1, qty: 0
     Then The order is rejected
+    Then No trade was made
     
-    When Attempt to place a "Bid" order at Price M2 by a quantity of 10.1
+    When Order "Bid" price x 1, qty: 10.1
     Then The order is rejected
+    Then No trade was made
 
-    When Attempt to place a "Offer" order at Price M2 by a quantity of -100
+    When Order "Bid" price x 1, qty: -100
     Then The order is rejected
-
-    #Verify no trades have happened for the rejected orders
+    Then No trade was made
