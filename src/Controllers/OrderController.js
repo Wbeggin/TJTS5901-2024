@@ -30,7 +30,6 @@ exports.createOrder = async (request, response) => {
     }
       // Validate that price is within +- 10% of the last traded price
       await getStock()
-      console.log(lastTradedPrice)
       const isValidPrice = await validatePrice(price)
       if (!isValidPrice) {
         return response.status(400).json({ error: 'Price must be within 10% of the last traded price.' })
@@ -75,14 +74,11 @@ exports.getTrades = async (request, response) => {
 
 const matchOrder = async (order) => {
     const { type, price, quantity } = order
-    console.log(type, price, quantity)
     let matchingOrder
     if (type === 'BID') {
       matchingOrder = await Order.findOne({ type: 'OFFER', price: { $lte: price } }).sort({ price: 1 })
-      console.log(matchingOrder)
     } else if (type === 'OFFER') {
       matchingOrder = await Order.findOne({ type: 'BID', price: { $gte: price } }).sort({ price: -1 })
-      console.log(matchingOrder)
     }
     if (matchingOrder) {
       // Create a new trade
@@ -91,7 +87,6 @@ const matchOrder = async (order) => {
         price: Math.max(price, matchingOrder.price),
         quantity: Math.min(quantity, matchingOrder.quantity),
       })
-      console.log(trade.price, trade.quantity, trade.time)
       await trade.save()
       trades++
       // Update the quantity of the matching order
@@ -119,7 +114,6 @@ const getStock = async () => {
       stock = response.data
       last_fetch = now  
       lastTradedPrice = stock.last[0]
-      console.log("lastTradedPrice: ", lastTradedPrice)
     } catch (error) {
       console.error(error)
     }
