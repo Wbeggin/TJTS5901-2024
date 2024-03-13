@@ -1,5 +1,6 @@
 const { get } = require('mongoose');
 const Order = require('../Models/Order');
+const Trade = require('../Models/Trade');
 const url = 'https://api.marketdata.app/v1/stocks/quotes/AAPL/'
 let stock = {}
 let last_fetch = 0
@@ -32,6 +33,10 @@ exports.createOrder = async (request, response) => {
       }
       const order = new Order({userId, price, type, quantity})
       const savedOrder = await order.save()
+
+      // Start the order matching process
+      await matchOrder(order)
+
       response.status(200).json({ message: 'Order created successfully.', order: savedOrder});
     } catch (error) {
       response.status(400).json({ error: error.message })
@@ -50,6 +55,38 @@ exports.getStock = async (request, response) => {
       response.status(500).send('Error fetching stock')
     }
 }
+
+const matchOrder = async (order) => {
+    const { type, price, quantity } = order
+    console.log(type, price, quantity)
+    let matchingOrder
+    if (type === 'BID') {
+      matchingOrder = await Order.findOne({ type: 'OFFER', price: { $lte: price } }).sort({ price: 1 })
+      console.log(matchingOrder)
+    } else if (type === 'OFFER') {
+      matchingOrder = await Order.findOne({ type: 'BID', price: { $gte: price } }).sort({ price: -1 })
+      console.log(matchingOrder)
+    }
+    if (matchingOrder) {
+      // Create a new trade
+      const trade = new Trade({
+        time: new Date(),
+        price: Math.max(price, matchingOrder.price),
+        quantity: Math.min(quantity, matchingOrder.quantity),
+      })
+      console.log(trade.price, trade.quantity, trade.time)
+      await trade.save()
+
+      // Update the quantity of the matching order
+      order.quantity -= trade.tradedQuantity;
+      matchingOrder.quantity -= trade.tradedQuantity
+      await order.save()
+      await matchingOrder.save()
+      // Remove the orders if their quantity is zero
+    if (order.quantity === 0) await order.remove()
+    if (matchingOrder.quantity === 0) await matchingOrder.remove()
+    }
+  }
 
 const getStock = async () => {
     const now = Date.now()

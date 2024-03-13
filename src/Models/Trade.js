@@ -1,18 +1,26 @@
-class Trade {
-    constructor(time, price, quantity) {
-    if (!time || !price || !quantity) {
-        throw new Error('Missing required parameters');
-        }
-    if (!Number.isInteger(quantity)) {
-        throw new Error('Quantity must be an integer.');
-    }
-    if (parseFloat(price.toFixed(2)) !== price) {
-        throw new Error('Price must be up to two decimal places.');
-        }
-      this.time = time;
-      this.price = price;
-      this.quantity = quantity;
+const mongoose = require('mongoose')
+
+const TradeSchema = new mongoose.Schema({
+  time: {
+    type: Date,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return Number.isInteger(v);
+      },
+      message: 'Quantity must be an integer.'
     }
   }
-  
-  module.exports = Trade;
+})
+
+const Trade = mongoose.model('Trade', TradeSchema);
+
+module.exports = Trade;

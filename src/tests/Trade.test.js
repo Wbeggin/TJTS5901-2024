@@ -1,6 +1,6 @@
 const Trade = require('../Models/Trade');
 
-describe('Trade', () => {
+describe.only('Trade', () => {
     test('should correctly initialize a trade', () => {
     const trade = new Trade(new Date(), 150.00, 10);
     expect(trade.time).toBeInstanceOf(Date);
