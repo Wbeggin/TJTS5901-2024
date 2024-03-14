@@ -7,6 +7,7 @@ let last_fetch = 0
 const axios = require('axios')
 let lastTradedPrice = 0
 let trades = 0
+let executedTrades = []
 
 exports.createOrder = async (request, response) => {
     try {
@@ -39,10 +40,11 @@ exports.createOrder = async (request, response) => {
 
       // Start the order matching process
       trades = 0
+      executedTrades = []
       await matchOrder(order)
       const tradesString = trades === 1 ? 'executed 1 trade' : `executed ${trades} trades`
       if (trades > 0) {
-        return response.status(200).json({ message: 'Order created successfully.', order: savedOrder, trades: tradesString })
+        return response.status(200).json({ message: 'Order created successfully.', order: savedOrder, trades: tradesString, executedTrades })
       }
       response.status(200).json({ message: 'Order created successfully.', order: savedOrder});
     } catch (error) {
@@ -89,6 +91,7 @@ const matchOrder = async (order) => {
       })
       await trade.save()
       trades++
+      executedTrades.push(trade)
       // Update the quantity of the matching order
       order.quantity -= trade.quantity;
       matchingOrder.quantity -= trade.quantity;
